@@ -759,14 +759,14 @@ def display():
  
            
            with st.expander("", expanded=True):
-                col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4 = st.columns(4)
 
            with col1:
                
                     
             st.subheader("Data Analysis Report")
          
-           if st.button("Data Analysis Report"):
+            if st.button("Data Analysis Report"):
          # Generate the profiling report
               profile = ProfileReport(
               df, title="Data Quality Profile Report", explorative=True)
@@ -775,14 +775,14 @@ def display():
               profile.to_file("data_quality_report.html")
 
          # Read the HTML content
-           with open('data_quality_report.html', 'r', encoding='utf-8') as f:
-                html_content = f.read()
+           #with open('data_quality_report.html', 'r', encoding='utf-8') as f:
+            #    html_content = f.read()
 
          # Display the HTML report using Streamlit components
-           components.html(html_content, height=1000, scrolling=True)
+           #components.html(html_content, height=1000, scrolling=True)
 
          # Provide a download button for the report
-           with open('data_quality_report.html', 'rb') as file:
+              with open('data_quality_report.html', 'rb') as file:
                 st.download_button(
                    label="Download Data Analysis Report",
                  data=file,
@@ -798,6 +798,5 @@ def display():
        
                    
                   
-       
     else:
             st.write("Please upload a file to start monitoring social data.")
