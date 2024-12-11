@@ -6,5 +6,4 @@ numpy
 nltk
 textblob
 textstat
-json
 rapidfuzz
