@@ -3,3 +3,4 @@ matplotlib
 ydata-profiling
 pandas
 numpy
+word_tokenize
