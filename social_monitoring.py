@@ -1,18 +1,15 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 from scipy import stats
 import numpy as np
 import re
 from ydata_profiling import ProfileReport
 import streamlit.components.v1 as components
-from page1 import run_page1
-from page2 import run_page2
-from page3 import run_page3
 from collections import Counter
 from nltk.tokenize import word_tokenize
 # from page4 import run_page4
-from datetime import datetime,timedelta
+#from datetime import datetime,timedelta
 import string 
 import pandas as pd
 
@@ -25,18 +22,18 @@ nltk.download('words')
 # Download NLTK stopwords
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
-from langdetect import detect, DetectorFactory
-from langdetect.lang_detect_exception import LangDetectException
-from sklearn.cluster import DBSCAN
-from scipy import stats
-import pandas as pd
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.impute import SimpleImputer
-from io import BytesIO
-from matplotlib.backends.backend_pdf import PdfPages
+#from langdetect import detect, DetectorFactory
+#from langdetect.lang_detect_exception import LangDetectException
+#from sklearn.cluster import DBSCAN
+#from scipy import stats
+
+#from sklearn.feature_selection import VarianceThreshold
+#from sklearn.impute import SimpleImputer
+#from io import BytesIO
+#from matplotlib.backends.backend_pdf import PdfPages
 import textstat
 from nltk.corpus import words as nltk_words  # Ensure to download the NLTK word corpus
-from collections import Counter
+
 import json
 from scipy.optimize import curve_fit
 from rapidfuzz import fuzz
@@ -758,22 +755,7 @@ def display():
                                 st.write(sentiment_counts)
                     else:
                                  st.error("The uploaded CSV does not contain a 'Comment Body' column.")
-
-    # Calculate the time difference in hours from the post creation time
-                   
-
-    # Calculate and display post decay rate
-                      
-    # Calculate and display post decay rate
-               
-    
-
-                    
-                   
-                    
-                                
-                   
-                                
+                       
  
            
            with st.expander("", expanded=True):
@@ -782,7 +764,7 @@ def display():
            with col1:
                
                     
-                st.subheader("Data Analysis Report")
+            st.subheader("Data Analysis Report")
          
            if st.button("Data Analysis Report"):
          # Generate the profiling report
