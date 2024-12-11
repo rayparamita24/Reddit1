@@ -11,3 +11,6 @@ textblob
 nltk
 nltk.corpus
 nltk.corpus
+json
+scipy.optimize
+rapidfuzz
