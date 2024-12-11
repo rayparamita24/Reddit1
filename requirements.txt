@@ -4,13 +4,4 @@ ydata-profiling
 pandas
 numpy
 collections
-nltk.tokenize
-string
-textblob
-nltk
-nltk.corpus
-nltk.corpus
-json
-scipy.optimize
-rapidfuzz
-streamlit.components
+
