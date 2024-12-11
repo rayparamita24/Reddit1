@@ -7,4 +7,5 @@ nltk
 textblob
 textstat
 json
-rapidfuzz
+RapidFuzz
+
