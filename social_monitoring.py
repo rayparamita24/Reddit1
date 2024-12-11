@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 #from ydata_profiling import ProfileReport
-import streamlit.components.v1 as components
+#import streamlit.components.v1 as components
 from collections import Counter
 from nltk.tokenize import word_tokenize
 # from page4 import run_page4
