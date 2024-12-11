@@ -5,3 +5,9 @@ pandas
 numpy
 nltk.tokenize
 collections
+nltk.tokenize
+string
+textblob
+nltk
+nltk.corpus
+nltk.corpus
