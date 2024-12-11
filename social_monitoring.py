@@ -103,7 +103,7 @@ def calculate_deletion_rate(df, text_column, date_column):
 
     
 
-def is_similar(post_title, keywords, threshold=70):
+def is_similar(post_title, keywords, threshold=90):
     # Check similarity of post_title with each keyword
     for keyword in keywords:
         similarity = fuzz.ratio(post_title.lower(), keyword.lower())
@@ -112,7 +112,7 @@ def is_similar(post_title, keywords, threshold=70):
     return False
 
 # Function to clean and filter posts based on keywords and similarity
-def clean_reddit_data(df, keywords, similarity_threshold=70):
+def clean_reddit_data(df, keywords, similarity_threshold=90):
     # 1. Remove posts with missing important data
     required_columns = ['post title', 'post url', 'post date']
     for col in required_columns:
@@ -713,10 +713,11 @@ def display():
                       
                   st.markdown("<span style='color:blue; font-weight:bold;'>Post Coverage Error:</span>", unsafe_allow_html=True)
                   keywords_input = st.text_area("Enter Proper data collection keyword")
+                  keywords = [keyword.strip() for keyword in keywords_input.split(',')] if keywords_input else []
                   required_columns = ['post title']
                   required_columns1 = ['title']
                   
-                  keywords = [keyword.strip() for keyword in keywords_input.split(',')] if keywords_input else []
+                  
                    # Button to fetch and filter posts
                   if st.button('Check Post Coverage'):
                        if keywords:
@@ -727,9 +728,10 @@ def display():
                            else:
 
                                df_clean = clean_reddit_data(df, keywords)
+                               st.write(df_clean)
                                if len(df_clean) >8:
                 
-                                  st.write(f"Coverage error is in acceptable range.")
+                                  st.write("Coverage error is in acceptable range.")
                                else:
                                   st.write("Data Coverage not upto the mark or you have entered wrong keywords")
                        else:
