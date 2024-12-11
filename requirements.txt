@@ -3,5 +3,5 @@ matplotlib
 ydata-profiling
 pandas
 numpy
-nltk.tokenize
+nltk
 
