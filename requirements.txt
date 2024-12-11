@@ -3,7 +3,6 @@ matplotlib
 ydata-profiling
 pandas
 numpy
-nltk.tokenize
 collections
 nltk.tokenize
 string
