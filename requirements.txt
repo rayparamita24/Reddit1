@@ -4,4 +4,4 @@ ydata-profiling
 pandas
 numpy
 nltk
-
+textblob
