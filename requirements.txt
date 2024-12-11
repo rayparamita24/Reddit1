@@ -4,3 +4,4 @@ ydata-profiling
 pandas
 numpy
 nltk.tokenize
+collections
