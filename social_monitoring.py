@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 #from scipy import stats
 import numpy as np
 import re
-from ydata_profiling import ProfileReport
+#from ydata_profiling import ProfileReport
 import streamlit.components.v1 as components
 from collections import Counter
 from nltk.tokenize import word_tokenize
@@ -925,28 +925,7 @@ def display():
                 
              st.subheader("Data Analysis Report")
          
-             if st.button("Data Analysis Report"):
-         # Generate the profiling report
-                profile = ProfileReport(df, title="Data Quality Profile Report", explorative=True)
-
-         # Save the report as an HTML file for download
-                profile.to_file("data_quality_report.html")
-
-         # Read the HTML content
-                #with open('data_quality_report.html', 'r', encoding='utf-8') as f:
-                    #  html_content = f.read()
-
-         # Display the HTML report using Streamlit components
-                #components.html(html_content, height=1000, scrolling=True)
-
-         # Provide a download button for the report
-                with open('data_quality_report.html', 'rb') as file:
-                      st.download_button(
-                           label="Download Data Analysis Report",
-                 data=file,
-                 file_name="data_quality_report.html",
-                 mime="text/html"
-              )
+             
 
           
             
