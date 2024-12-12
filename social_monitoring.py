@@ -920,7 +920,7 @@ def display():
                with col4:
                     st.markdown("<span style='color:blue; font-weight:bold;'> Coverage Error:</span>", unsafe_allow_html=True)
                          # User can input a query
-                    query = st.text_input("Enter a keywords to check data coverage:") 
+                    query = st.text_input("Enter a keyword to check data coverage:") 
                     if st.button("Search"):
                        if query:  
                           relevant_results = df[df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
