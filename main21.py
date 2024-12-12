@@ -8,7 +8,7 @@ st.set_page_config(page_title="Data Quality Monitoring Tool", layout="wide")
 #st.title("Data Monitoring Dashboard")
 st.markdown("""
     <h1 style='text-align: center; color: blue; font-weight: bold; font-family: "Courier New", monospace;'>
-    RedditIQ:</h1> <h4 style= color: black;> Social Data Quality Monitoring Tool
+    RedditIQ:</h1> <h4 style= color: black;> Social Data Quality Monitoring Tool with Reddit Post
     </h4>
     """, unsafe_allow_html=True)
 st.write("")
