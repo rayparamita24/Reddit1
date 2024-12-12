@@ -43,5 +43,5 @@ if st.session_state.page == "social":
 
 # Display message if no page is selected
 if st.session_state.page is None:
-    st.write("Please select button to monitor Reddit data.")
+    st.write("Please select button.")
 
