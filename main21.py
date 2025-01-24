@@ -13,7 +13,7 @@ import time
 import pandas as pd
 #from praw.exceptions import NotFound
 from social_monitoring import display
-from ydata_profiling import ProfileReport
+
 from prawcore.exceptions import NotFound
 
 st.set_page_config(page_title="Data Quality Monitoring Tool", layout="wide")
@@ -177,7 +177,7 @@ if st.session_state.page == "Home":
                                 file_name=f'reddit_posts_comments_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
                                 mime='text/csv',
                             )
-                            save_path = 'C:/py/reddit/reddit_data_25.csv'
+                            save_path = 'reddit_data_25.csv'
                             os.makedirs('./saved_data', exist_ok=True)
                             df.to_csv(save_path, index=False)
                             st.success("Data saved")
