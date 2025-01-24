@@ -614,7 +614,7 @@ def check_post_credibility(row):
 
 def display():
     # Hardcoded file path
-    file_path = "C:/py/reddit/reddit_data_25.csv"  # Replace with the actual file path
+    file_path = "reddit_data_25.csv"  # Replace with the actual file path
 
     # Check if the file exists before attempting to load
     if not os.path.exists(file_path):
@@ -631,7 +631,7 @@ def display():
         # Handle other potential errors (e.g., file reading errors)
         st.error(f"An error occurred while reading the file: {e}")
         
-    all_columns = df.columns.tolist()
+   # all_columns = df.columns.tolist()
     #df.columns = df.columns.str.lower()
    # with st.expander("", expanded=True):
     col1, col2, col3, col4 = st.columns(4)
@@ -816,7 +816,7 @@ def display():
                else:    
                   comment_weight = 1.5  # Weight for comments
                   df['engagement_score'] = ((df['post score']) + (df['number of comments'] * comment_weight))# Calculate the maximum engagement score
-                  eg=df['engagement_score'].mean()
+                  #eg=df['engagement_score'].mean()
                   max_engagemnt_score = df['engagement_score'].max()
                        
                   df['engagement_percentage'] = (df['engagement_score'] /max_engagemnt_score) 
@@ -1051,9 +1051,9 @@ def display():
                   profile = ProfileReport(df, title="Data Quality Profile Report", explorative=True)
 
              # Save the report as an HTML file for download
-                  profile.to_file("C:/py/reddit/data_quality_report.html")
+                  profile.to_file("data_quality_report.html")
 
-                  with open('C:/py/reddit/data_quality_report.html', 'rb') as file:
+                  with open('data_quality_report.html', 'rb') as file:
                         st.download_button(label="Download Data Analysis Report",data=file,file_name="data_quality_report.html", mime="text/html" )
 
 
