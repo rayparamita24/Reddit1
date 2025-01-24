@@ -12,7 +12,7 @@ from nltk.tokenize import word_tokenize
 #from datetime import datetime,timedelta
 import string 
 import pandas as pd
-
+import os
 from textblob import TextBlob
 import nltk
 from nltk.corpus import stopwords
@@ -37,9 +37,57 @@ from nltk.corpus import words as nltk_words  # Ensure to download the NLTK word 
 import json
 from scipy.optimize import curve_fit
 from rapidfuzz import fuzz
+import requests
+
+#valid_words = set(words.words())
+def check_if_structured(df):
+    try:
+        # Step 1: Check the first few rows of data to see if it's in tabular format
+        #st.write("First 5 rows of the data:")
+       # st.write(df.head())
+        
+        # Step 2: Check the data types of each column to ensure consistency
+        #st.write("\nData types of each column:")
+        #st.write(df.dtypes)
+        
+        # Step 3: Check for missing values in each column
+        #st.write("\nMissing values:")
+        total_missing = df.isnull().sum().sum()
+        st.markdown(f"<p style='color: green; font-size: 16px;'>Total Missing Values: {total_missing}</p>", unsafe_allow_html=True)
+
+               
+        # Step 4: Check for unique values in each column (important for consistency)
+       # st.write("\nNumber of unique values:")
+        unik=df.nunique().sum()
+        st.markdown(f"<p style='color: green; font-size: 16px;'>Total Unique Values: {unik}</p>", unsafe_allow_html=True)
+
+        # Step 5: Check if a specific column can be a unique identifier (primary key)
+        # Let's assume we check for 'id' column, modify as needed
+        if 'post id' in df.columns:
+            if df['post id'].is_unique:
+                st.write("\nThe 'id' column is unique and can be used as a primary key.")
+            else:
+                st.write("\nThe 'id' column is NOT unique and cannot be used as a primary key.")
+        else:
+            st.write("\nThere is no 'id' column in the data.")
+
+        # Step 6: Check if the data follows a structured format
+        if isinstance(df, pd.DataFrame):
+            st.write("\nThe data is in tabular format (DataFrame).")
+        
+    except Exception as e:
+        st.write(f"Error: {e}")
 
 
+# Function to check if query is a valid word using NLTK
+def is_valid_word_online_google(word):
+    url = f"https://www.google.com/search?q=definition+of+{word}"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    response = requests.get(url, headers=headers)
+    return "did not match any documents" not in response.text.lower()
 
+    # Check if all words in the query exist in the valid words corpus
+    
 # Function to check for required columns
 def check_required_columns(df):
     """
@@ -198,11 +246,11 @@ def flag_spam(df):
             spam_flags.append('No Content')
             continue
         
-        spam_flag = 'Not Spam'  # Default flag
+        spam_flag = 'Only Text(No spam)'  # Default flag
         
         # Check for embedded links
         if contains_links(post_content):
-           spam_flag = 'Contains Embedded Link'
+           spam_flag = 'Promotional content and link'
                
         # Check if the post is a removed or deleted message
         elif any(keyword in post_content.lower() for keyword in removed_keywords):
@@ -210,13 +258,13 @@ def flag_spam(df):
         elif is_too_short(post_content):
              spam_flag = 'Too Short Message'
         elif check_brand(post_content):
-             spam_flag = 'Contains spam words'
+             spam_flag = 'Contains Clicking option'
         # Check for repeated posts
         
     
         spam_flags.append(spam_flag)
     
-    df['Spam Flag'] = spam_flags
+    df['Post Flag'] = spam_flags
     return df
 # Visualization function to show the number of spam posts
 
@@ -475,12 +523,6 @@ def calculate_total_score(df):
     overall_avg_score = sum(total_scores) / len(total_scores) if total_scores else None
     return overall_avg_score, total_scores
 
-
-
-
-
-
-
 # Function to clean the text
 
 def clean_text(text):
@@ -571,26 +613,30 @@ def check_post_credibility(row):
         return False  # Missing required values
 
 def display():
-    # st.title("Survey Data Monitoring")
+    # Hardcoded file path
+    file_path = "C:/py/reddit/reddit_data_25.csv"  # Replace with the actual file path
 
-    # File upload option
-    uploaded_file = st.file_uploader(
-        "Upload a social data file (CSV )", type=["csv"])
+    # Check if the file exists before attempting to load
+    if not os.path.exists(file_path):
+        st.error(f"File not found: {file_path}. Please check the file path.")
+        return  # Exit the function if file is not found
 
-    if uploaded_file is not None:
-        # Display the name of the uploaded file
-       try:
-           df = pd.read_csv(uploaded_file, encoding=encoding)
-       except Exception:
-    # Fallback to latin-1 if the detected encoding fails
-           df = pd.read_csv(uploaded_file, encoding='latin-1')
-           all_columns = df.columns.tolist()
-       
-           with st.expander("", expanded=True):
-                st.subheader("Data Quality Metrics Overview")
-                col1,col2,col3,col4= st.columns(4)
-                        
-           with col1:
+    try:
+        # Load the CSV file directly
+        df = pd.read_csv(file_path)
+    except UnicodeDecodeError:
+        # Fallback to latin-1 encoding if utf-8 fails
+        df = pd.read_csv(file_path, encoding='latin-1')
+    except Exception as e:
+        # Handle other potential errors (e.g., file reading errors)
+        st.error(f"An error occurred while reading the file: {e}")
+        
+    all_columns = df.columns.tolist()
+    #df.columns = df.columns.str.lower()
+   # with st.expander("", expanded=True):
+    col1, col2, col3, col4 = st.columns(4)
+   # col1, col2, col3, col4 = st.columns(4)
+    with col1:
                st.markdown("<span style='color:blue; font-weight:bold;'>Total Rows & Columns:</span>", unsafe_allow_html=True) 
                # dupliid_check(df)
                #dqi_metrics = calculate_dqi(df)
@@ -654,29 +700,26 @@ def display():
 
                # Display the bar chart in Streamlit
                   st.pyplot(fig)
+                
 
 
-# Create a bar chart for duplicate counts
-
-
-# Display Total Word Count
-  
               
-
-               with col2:
+                    
+           
+    with col2:
                    
-                  st.markdown("<span style='color:blue; font-weight:bold;'>Total Post Deleted:</span>", unsafe_allow_html=True) 
-                  df.columns = [col.lower() for col in df.columns]
-                  required_columns = ['post title', 'post url']
-                  required_columns1 = ['title']
-                  if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
-                      st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
-                  else:
-                      total_count = total_removed_deleted(df)
-                      st.markdown(f"<p style='color: green; font-size: 15px; font-weight: bold;'>Total Count: {total_count}</p>", unsafe_allow_html=True)
+               st.markdown("<span style='color:blue; font-weight:bold;'>Total Post Deleted:</span>", unsafe_allow_html=True) 
+               df.columns = [col.lower() for col in df.columns]
+               required_columns = ['post title', 'post url']
+               required_columns1 = ['title']
+               if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
+                  st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
+               else:
+                  total_count = total_removed_deleted(df)
+                  st.markdown(f"<p style='color: green; font-size: 15px; font-weight: bold;'>Total Count: {total_count}</p>", unsafe_allow_html=True)
 
                   #st.metric("Unique Value Count",dqi_metrics['Unique Values'].sum())
-                  st.markdown('<span style="color:blue; font-weight:bold;">Noisy Post Count</span>', unsafe_allow_html=True)
+                  st.markdown('<span style="color:blue; font-weight:bold;"> Spam Content Detection</span>', unsafe_allow_html=True)
                   #df['Post Date'] = pd.to_datetime(df['Post Date'])
                   # Flag spam posts
                   required_columns = ['post title', 'comment body']
@@ -687,28 +730,27 @@ def display():
                       df = flag_spam(df)
                   #st.write(df)
                   #visualize_spam(df)
-                      total_spam = df[df['Spam Flag'] != 'Not Spam'].shape[0]
+                     # total_spam = df[df['Post Flag'] != 'Not Spam'].shape[0]
                   #total_spam = len(df[df['Spam Flag'] != 'Not Spam'])
-                      st.write(f"Total Spam Count: {total_spam}")
-                      spam_counts = df['Spam Flag'].value_counts()
+                      #st.write(f"Total Noisy Post Count: {total_spam}")
+                      spam_counts = df['Post Flag'].value_counts()
                       st.write(spam_counts)
-                  st.markdown('<span style="color:blue; font-weight:bold;">Post Credibility</span>', unsafe_allow_html=True)
-                  df.columns = [col.lower() for col in df.columns]
+               st.markdown('<span style="color:blue; font-weight:bold;">Post Credibility</span>', unsafe_allow_html=True)
+               df.columns = [col.lower() for col in df.columns]
 
-                  required_columns = ['post title', 'post score','number of comments', 'nsfw']
-                  required_columns1 = ['title', 'score']
-                  if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
-                      st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
-
-                  
-                  else:
+               required_columns = ['post title', 'post score','number of comments', 'nsfw']
+               required_columns1 = ['title', 'score']
+               if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
+                  st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
+                
+               else:
                       
-                      dw = df.apply(check_post_credibility, axis=1)                     
-                      credible_posts_count = dw.sum()
-                      total_posts = len(df)
-                      st.write(f"Total Posts: {total_posts}")
+                  dw = df.apply(check_post_credibility, axis=1)                     
+                  credible_posts_count = dw.sum()
+                  total_posts = len(df)
+                  st.write(f"Total Posts: {total_posts}")
 
-                      st.write(f"Number of credible posts: {credible_posts_count}")
+                  st.write(f"Number of credible posts: {credible_posts_count}")
   
                       
                   st.markdown("<span style='color:blue; font-weight:bold;'>Ethical Issue:</span>", unsafe_allow_html=True)
@@ -729,12 +771,12 @@ def display():
                       else:
                           st.error("File contain unethical posts")
                     
-                  st.markdown("<span style='color:blue; font-weight:bold;'> Completeness:</span>", unsafe_allow_html=True)
-                  custom_metadata = {
+               st.markdown("<span style='color:blue; font-weight:bold;'> Completeness:</span>", unsafe_allow_html=True)
+               custom_metadata = {
                       "columns": {
                           "post id": {"type": "int", "constraints": ["unique", "non-null"]},
                           "comment id": {"type": "int", "constraints": ["unique", "non-null"]},
-                          "post author": {"type": "str", "constraints": ["non-null", "alphanumeric"]},
+                          "comment author": {"type": "str", "constraints": ["non-null", "alphanumeric"]},
                           "posted by":{"type": "str", "constraints": ["non-null", "alphanumeric"]},
                            "post title": {"type": "str"},
                           # "title": {"type": "str"},
@@ -757,48 +799,48 @@ def display():
                           #"Subreddit": {"type": "str", "constraints": ["non-null"]},
                       }
                   }
-                  missing_values = df.isnull().sum().sum()  # Total missing values
-                  total_cells = df.shape[0] * df.shape[1]  # Total cells
-                  missing_percent = (missing_values / total_cells) * 100
-                  actual_columns = df.columns.tolist()
-                  expected_columns = list(custom_metadata["columns"].keys())
+               missing_values = df.isnull().sum().sum()  # Total missing values
+               total_cells = df.shape[0] * df.shape[1]  # Total cells
+               missing_percent = (missing_values / total_cells) * 100
+               actual_columns = df.columns.tolist()
+               expected_columns = list(custom_metadata["columns"].keys())
 # Identify missing columns by finding the difference between expected and actual columns
-                  missing_columns = list(set(expected_columns) - set(actual_columns))
+               missing_columns = list(set(expected_columns) - set(actual_columns))
 
 # Calculate the percentage of missing columns
-                  missing_percentage1 = (len(missing_columns) / 13) * 100
-                  required_columns = ['post score', 'number of comments']
-                  required_columns1 = ['score','no of comments']
-                  if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
-                      st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
-                  else:    
-                       comment_weight = 1.5  # Weight for comments
-                       df['engagement_score'] = ((df['post score']) + (df['number of comments'] * comment_weight))# Calculate the maximum engagement score
-                       eg=df['engagement_score'].mean()
-                       max_engagemnt_score = df['engagement_score'].max()
+               missing_percentage1 = (len(missing_columns) / 13) * 100
+               required_columns = ['post score', 'number of comments']
+               required_columns1 = ['score','no of comments']
+               if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
+                  st.error(f"CSV must include the following columns: {', '.join(required_columns)}")
+               else:    
+                  comment_weight = 1.5  # Weight for comments
+                  df['engagement_score'] = ((df['post score']) + (df['number of comments'] * comment_weight))# Calculate the maximum engagement score
+                  eg=df['engagement_score'].mean()
+                  max_engagemnt_score = df['engagement_score'].max()
                        
-                       df['engagement_percentage'] = (df['engagement_score'] /max_engagemnt_score) 
-                       eg_per=(df['engagement_percentage'].mean())*100
+                  df['engagement_percentage'] = (df['engagement_score'] /max_engagemnt_score) 
+                  eg_per=(df['engagement_percentage'].mean())*100
                        #st.write(eg_per)
                        #st.write(eg_per)
-                       total_missing_percent =( missing_percentage1+missing_percent+eg_per)/3
-                       comp=100-total_missing_percent
-                       formatted_text = f"<span style='color:green; font-size:20px;'>{comp:.2f}%</span>"
-                       st.markdown(formatted_text, unsafe_allow_html=True)
-                       labels = ['Missing Data', 'Engagement Rate', 'Missing Columns with Metadata']
-                       sizes = [missing_percent, eg_per, missing_percentage1]
-                       colors = ['red', 'blue', 'green']
+                  total_missing_percent =( missing_percentage1+missing_percent+eg_per)/3
+                  comp=100-total_missing_percent
+                  formatted_text = f"<span style='color:green; font-size:20px;'>{comp:.2f}%</span>"
+               st.markdown(formatted_text, unsafe_allow_html=True)
+               labels = ['Missing Data', 'Engagement Rate', 'Missing Columns with Metadata']
+               sizes = [missing_percent, eg_per, missing_percentage1]
+               colors = ['red', 'blue', 'green']
 
                        # Plot the pie chart
                        #import matplotlib.pyplot as plt
 
-                       fig, ax = plt.subplots()
-                       ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-                       ax.set_title('Data Completeness')
+               fig, ax = plt.subplots()
+               ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+               ax.set_title('Data Completeness')
 
                        # Display in Streamlit
                        #st.subheader("Data Quality Overview")
-                       st.pyplot(fig)
+               st.pyplot(fig)
                      
 
                      # Streamlit interface
@@ -807,223 +849,219 @@ def display():
                      
                    
                  
-               with col3:
-                  st.markdown("<span style='color:blue; font-weight:bold;'>Post Deletion Rate:</span>", unsafe_allow_html=True)
-                  check_required_columns(df)
-                  text_column = 'comment body' if 'comment body' in df.columns else 'comments'
-                  date_column = 'comment date'
+    with col3:
+               st.markdown("<span style='color:blue; font-weight:bold;'>Post Deletion Rate:</span>", unsafe_allow_html=True)
+               check_required_columns(df)
+               text_column = 'comment body' if 'comment body' in df.columns else 'comments'
+               date_column = 'comment date'
                   
                   #st.success(f"Using '{text_column}' as the text column and '{date_column}' as the date column.")
 
                   # Calculate deletion rate
                   #st.write("### Deletion Rate Calculation:")
-                  deletion_df = calculate_deletion_rate(df, text_column, date_column)
+               deletion_df = calculate_deletion_rate(df, text_column, date_column)
 
-                  if deletion_df.empty:
-                      st.warning("No 'deleted' or 'removed' comments found in the dataset.")
-                  else:
+               if deletion_df.empty:
+                  st.warning("No 'deleted' or 'removed' comments found in the dataset.")
+               else:
                      # st.write("Deletion Rate Data:")
-                      st.write(deletion_df)
-                      st.markdown("<span style='color:black; font-weight:bold; size:10px'>Deletion Rate Over Time</span>", unsafe_allow_html=True)
+                  st.write(deletion_df)
+                  st.markdown("<span style='color:black; font-weight:bold; size:10px'>Deletion Rate Over Time</span>", unsafe_allow_html=True)
                       # Plot deletion rate over time
                       
-                      plt.figure(figsize=(10, 6))
-                      plt.plot(deletion_df['date'], deletion_df['deletion_count'], marker='o', linestyle='-', color='red')
-                      plt.xlabel('Date')
-                      plt.ylabel('Number of Deletions')
-                      plt.title('Comment Deletion Rate Over Time')
-                      plt.xticks(rotation=45)
-                      plt.grid(True)
-                      st.pyplot(plt)
+                  plt.figure(figsize=(10, 6))
+                  plt.plot(deletion_df['date'], deletion_df['deletion_count'], marker='o', linestyle='-', color='red')
+                  plt.xlabel('Date')
+                  plt.ylabel('Number of Deletions')
+                  plt.title('Comment Deletion Rate Over Time')
+                  plt.xticks(rotation=45)
+                  plt.grid(True)
+                  st.pyplot(plt)
                  
 
         # Determine available columns
-                  st.markdown("<span style='color:blue; font-weight:bold;'>Post Readability Check:</span>", unsafe_allow_html=True) 
-                  overall_score, post_scores = calculate_total_score(df)
-                  if overall_score >= 40:
-                     quality_message = "Post is Readable"
-                     message_color = "green"
-                  else:
-                     quality_message = "Post not easily readable"
-                     message_color = "red"
-
-# Display the score with quality message and custom styling
-                  st.markdown(f"""
-    
-    <p style="color: {message_color}; font-size: 15px; font-weight: bold;">
-        {quality_message}
-    </p>
-""", unsafe_allow_html=True)
+               st.markdown("<span style='color:blue; font-weight:bold;'>Post Readability Check:</span>", unsafe_allow_html=True) 
+               overall_score, post_scores = calculate_total_score(df)
+               if overall_score >= 40:
+                  quality_message = "Post is Readable"
+                  message_color = "green"
+               else:
+                  quality_message = "Post not easily readable"
+                  message_color = "red"
+                  st.markdown(f"""<p style="color: {message_color}; font-size: 15px; font-weight: bold;">{quality_message}</p>""", unsafe_allow_html=True)
    # Display the overall readability score
-                  st.markdown("<span style='color:blue; font-weight:bold;'>Consistency Check with reference Metadata:</span>", unsafe_allow_html=True)
-                  option = st.radio("Choose Metadata Source:", ["Custom Metadata", "Upload JSON Metadata File"])
-                  if option == "Custom Metadata":
-                      custom_metadata = {
+               st.markdown("<span style='color:blue; font-weight:bold;'>Consistency Check with Reference Metadata:</span>", unsafe_allow_html=True)
+               option = st.radio("Choose Metadata Source:", ["Custom Metadata", "Upload JSON Metadata File"])
+               if option == "Custom Metadata":
+                  custom_metadata = {
                           "columns": {
                               "post id": {"type": "int", "constraints": ["unique", "non-null"]},
                               "comment id": {"type": "int", "constraints": ["unique", "non-null"]},
-                              "post author": {"type": "str", "constraints": ["non-null", "alphanumeric"]},
+                              #"comment author": {"type": "str", "constraints": ["non-null", "alphanumeric"]},
                               "posted by":{"type": "str", "constraints": ["non-null", "alphanumeric"]},
-                               "post title": {"type": "str"},
-                               "title": {"type": "str"},
+                              "post title": {"type": "str"},
+                             # "title": {"type": "str"},
                               "comment author": {"type": "str", "constraints": ["non-null", "alphanumeric"]},
                               "comment body": {"type": "str", "allowed_values": ["[removed]"], "allow_empty": False},
-                              "comment status": {"type": "str"},
-                              "no of comments": {"type": "int", "constraints": ["non-negative"]},
+                              #"comment status": {"type": "str"},
+                              "number of comments": {"type": "int", "constraints": ["non-negative"]},
                              # "nsfw": {['false'], ['true']},
                              # "not safe": {['false'], ['true']},
                              # "post url": {['https://example.com/post1', 'https://example.com/post2']},
                              # "url": {['https://example.com/post1', 'https://example.com/post2']},
-                              "upvotes": {"type": "int", "constraints": ["non-negative"]},
-                              "downvotes": {"type": "int", "constraints": ["non-negative"]},
+                              
                               "post score": {"type": "int", "constraints": ["non-negative"]},
                               "comment score": {"type": "int", "constraints": ["non-negative"]},
-                              "score": {"type": "int", "constraints": ["non-negative"]},
                               "post date": {"type": "datetime", "constraints": ["valid-format"]},
                               "comment Date": {"type": "datetime", "constraints": ["valid-format"]},
-                              "Timestamp": {"type": "datetime", "constraints": ["valid-format"]},
-                              "Subreddit": {"type": "str", "constraints": ["non-null"]},
+                              
                           }
                       }
-                  elif option == "Upload JSON Metadata File":
-                       uploaded_file = st.file_uploader("Upload a JSON Metadata File", type="json")
+               elif option == "Upload JSON Metadata File":
+                    uploaded_file = st.file_uploader("Upload a JSON Metadata File", type="json")
     
-                       if uploaded_file is not None:
-                           metadata = json.load(uploaded_file)
+                    if uploaded_file is not None:
+                       metadata = json.load(uploaded_file)
                            #st.json(metadata)  # Display the uploaded metadata
-                  if st.button('Check Consistency'):
-                     required_columns = ['post title','post score','posted by','post date','number of comments','comment id','comment author','comment score', 'comment body','comment date']
-                     required_columns1 = ['title','post author','comment status','upvote','downvote','score']
-                     if not (all(col in df.columns for col in required_columns) or all(col in df.columns for col in required_columns1)):
-                         st.error(f"CSV must include the following columns: {', '.join(required_columns)}") 
-                     if option == "Custom Metadata":
-                         
-                        issues = check_consistency(df, custom_metadata)
-                     elif option == "Upload JSON Metadata File":
-                          issues = check_consistency(df, metadata)
+               
+               if st.button('Check Consistency'):
+                  required_columns =['post id','post title', "post score", "posted by", "post date", "no of comments", "comment id", "comment author", "comment score", "comment body", "comment date"]
+                  #required_columns1 = ["title", "post author", "comment status", "upvote", "downvote", "score"]
+                  df.columns = df.columns.str.lower()
+                  #st.write(df.columns)
+                  if not ((col in df.columns for col in required_columns)):
+                     st.error(f"CSV must add the following columns: {(required_columns)}") 
 
-    # Display results
-                     if isinstance(issues, list) and issues:
-                        st.error("Consistency Issues Found:")
+                     #issues = []  # Initialize issues as an empty list in case of early exit
+                  else:
+                        # Run consistency checks
+                    if option == "Custom Metadata":
+                       issues = check_consistency(df, custom_metadata)
+                    elif option == "Upload JSON Metadata File" and metadata:
+                        issues = check_consistency(df, metadata)
+                    else:
+                         st.error("Metadata not provided. Please upload a valid JSON file.")
+                         issues = []  # Initialize issues as an empty list in case of metadata issues
+
+                    # Display results
+                    if isinstance(issues, list) and issues:
+                        st.write("Consistency Issues Found:")
                         for issue in issues:
                             st.write(f"- {issue}")
-                     else:
-                          st.success(issues)  # This will indicate that everything is consistent
-
-                  #st.write(f" Nearly Redundant Post: {total_near_duplicates}")
-               
-                # Display the cleaned dataset
-                
-
-
-
-               with col4:
-                    st.markdown("<span style='color:blue; font-weight:bold;'> Coverage Error:</span>", unsafe_allow_html=True)
-                         # User can input a query
-                    query = st.text_input("Enter a keyword to check coverage error") 
-                    if st.button("Search"):
-                       if query:  
-                          relevant_results = df[df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
-                # Find irrelevant posts
-                          irrelevant_results = df[~df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
-                          x=len(df)
-                          revv=len(irrelevant_results)
-                          cove=x/revv
-                          
-                          if cove<=1.05:
-                          
-                             st.error("Coverage error is not acceptable range")
-                             #st.dataframe( irrelevant_results)
-                            # st.markdown(f"<p style='color: green;'>{revv}</p>", unsafe_allow_html=True)
-                          else:
-                             st.warning("Coverage error is in acceptable range")
-                       else:
-                          st.write("Please enter a keyword.")
-
-                    #st.markdown("<span style='color:blue; font-weight:bold;'> Post Decay Rate:</span>", unsafe_allow_html=True)
-                    st.markdown("<span style='color:blue; font-weight:bold;'> Post Decay Rate:</span>", unsafe_allow_html=True)
-                    if 'post date' not in df.columns:
-                        st.error("The 'Post Date' column is missing from the dataset.")
                     else:
+                        st.success("No consistency issues found. Data is valid.")
+                  
+               st.markdown("<span style='color:blue; font-weight:bold;'> Structured Data Checker:</span>", unsafe_allow_html=True)
+       # Check required columns
+               
+
+               check_if_structured(df)      
+               missing_percentage1 = (len(missing_columns) / 13) * 100
+               st.markdown(f"<p style='color: green; font-size: 16px;'>Missing column with metadata: {  missing_percentage1}</p>", unsafe_allow_html=True)
+               total_missing = df.isnull().sum().sum()
+               if(total_missing<=5)&(missing_percentage1<10):
+                  st.write("The data is in a semi structured format")
+               else:
+                   st.write("The data is in a structured tabular format") 
+                   
+
+                   #except Exception as e:
+                #   st.error(f"An error occurred during consistency checking: {e}")   
+
+
+
+    with col4:
+                    
+               st.markdown("<span style='color:blue; font-weight:bold;'> Relevant Post Range with Keyword:</span>", unsafe_allow_html=True)
+                        # User can input a query
+               query = st.text_input("Enter a keyword to search for:")
+               if st.button("Search"):
+                  if query:  
+                     if is_valid_word_online_google(query):
+                         
+                     #relevant_results = df[df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
+        # Find irrelevant posts
+                     #irrelevant_results = df[~df.apply(lambda row: row.astype(str).str.contains(query, case=False).any(), axis=1)]
+                     #rv=len(relevant_results)
+                    
+                         #str==pattern = r'\b' + re.escape(query) + r'\b'  # Regular expression for word boundaries
+            
+            # Search both 'title' and 'comment_body' for the keyword (case-insensitive)
+                         relevant_results = df[df['post title'].str.contains(query, case=False, na=False) | df['comment body'].str.contains(query, case=False, na=False)]
+
+                     #relevant_results = df[df['post title'].str.contains(query, case=False, na=False) | df['comment_body'].str.contains(query, case=False, na=False)]
+                         relevant_post_count = len(relevant_results)
+                         total_posts = len(df)
+
+                         if relevant_post_count / total_posts >= 0.10:
+                            st.write("Relevant Post Range is high.")
+                         else:  
+                                    
+                            st.write(" Relevant Post Range is not acceptable range")
+                             #st.dataframe( irrelevant_results)
+                     else:
+                         st.warning("Please enter a valid word")# st.markdown(f"<p style='color: green;'>{revv}</p>", unsafe_allow_html=True)
+                     
+                  else:
+                      st.write("Please enter a keyword.")
+
+        
+        
+                    #st.markdown("<span style='color:blue; font-weight:bold;'> Post Visibility Rate:</span>", unsafe_allow_html=True)
+               st.markdown("<span style='color:blue; font-weight:bold;'> Post Visibility Rate:</span>", unsafe_allow_html=True)
+               if 'post date' not in df.columns:
+                   st.error("The 'Post Date' column is missing from the dataset.")
+               else:
     # Convert 'Post Date' to datetime, coerce invalid entries to NaT
-                        df['post date'] = pd.to_datetime(df['post date'], errors='coerce')
+                   df['post date'] = pd.to_datetime(df['post date'], errors='coerce')
+                   if df['post date'].isnull().all():
+                      st.error("All entries in the 'Post Date' column are invalid or missing.")
+                   elif df['post date'].isnull().any():
+                        st.warning(f"Some entries in the 'Post Date' column are invalid or missing ({df['post date'].isnull().sum()} rows).")
+                   else:
+                         df['Time Since Post'] = ( df['post date'].iloc[0]-df['post date']).dt.total_seconds() / 3600
+
+# Calculate and display post decay rate
+                         calculate_decay_rate(df)
+
     
     # Check for missing or invalid dates
-                        if df['post date'].isnull().all():
-                          st.error("All entries in the 'Post Date' column are invalid or missing.")
-                        elif df['post date'].isnull().any():
-                             st.warning(f"Some entries in the 'Post Date' column are invalid or missing ({df['post date'].isnull().sum()} rows).")
-                        else:
-                             df['Time Since Post'] = (df['post date'] - df['post date'].iloc[0]).dt.total_seconds() / 3600
-
-    # Calculate and display post decay rate
-                             calculate_decay_rate(df)
-
-                    st.markdown("<span style='color:blue;font-weight:bold;'>Context Based Sentiment </span>", unsafe_allow_html=True)
-                    if 'comment body' in df.columns or 'comment' in df.columns:
-    # Identify the correct column dynamically
-                        comment_column = 'comment body' if 'comment body' in df.columns else 'comment'
-                        # Select N for N-grams
-                        n = 2
-                        summary = summarize_sentiments_and_frequencies(df, comment_column, n)
                         
-                             #st.subheader("Sentiment Counts")
-                        sentiment_counts = {
-                         "Positive": summary["Positive"],
-                         "Negative": summary["Negative"],
-                         "Neutral": summary["Neutral"],
-                            }
-                       
-                        st.write(sentiment_counts)
-                    else:
-                         st.error("The uploaded CSV does not contain a 'Comment' column.")
-
-                 
-                   
-                    
-                                
-                   
-                                
- 
-           
-           with st.expander("", expanded=True):
-                 col1, col2, col3, col4 = st.columns(4)
-
-           with col1:
+               st.markdown("<span style='color:blue;font-weight:bold;'>Context Based Sentiment </span>", unsafe_allow_html=True)
+               if 'comment body' in df.columns or 'comment' in df.columns:
+                  comment_column = 'comment body' if 'comment body' in df.columns else 'comment'
+               # Select N for N-grams
+                  n = 2
+                  summary = summarize_sentiments_and_frequencies(df, comment_column, n)
                
-                
-             st.subheader("Data Analysis Report")
-         
-             if st.button("Data Analysis Report"):
-         # Generate the profiling report
-                profile = ProfileReport(df, title="Data Quality Profile Report", explorative=True)
+                    #st.subheader("Sentiment Counts")
+                  sentiment_counts = {
+                "Positive": summary["Positive"],
+                "Negative": summary["Negative"],
+                "Neutral": summary["Neutral"],
+                   }
+              
+                  st.write(sentiment_counts)
 
-         # Save the report as an HTML file for download
-                profile.to_file("data_quality_report.html")
+# Identify the correct column dynamically
+               else:
+                     st.error("The uploaded CSV does not contain a 'Comment' column.")
+               if st.button("Data Analysis Report"):
+             # Generate the profiling report
+                  profile = ProfileReport(df, title="Data Quality Profile Report", explorative=True)
 
-         # Read the HTML content
-                #with open('data_quality_report.html', 'r', encoding='utf-8') as f:
-                    #  html_content = f.read()
+             # Save the report as an HTML file for download
+                  profile.to_file("C:/py/reddit/data_quality_report.html")
 
-         # Display the HTML report using Streamlit components
-                #components.html(html_content, height=1000, scrolling=True)
+                  with open('C:/py/reddit/data_quality_report.html', 'rb') as file:
+                        st.download_button(label="Download Data Analysis Report",data=file,file_name="data_quality_report.html", mime="text/html" )
 
-         # Provide a download button for the report
-                with open('data_quality_report.html', 'rb') as file:
-                      st.download_button(
-                           label="Download Data Analysis Report",
-                 data=file,
-                 file_name="data_quality_report.html",
-                 mime="text/html"
-              )
 
-          
-            
+
+    
                 
                 
        
        
                    
-                  
-    else:
-            st.write("Please upload a file to start monitoring social data.")
+    
