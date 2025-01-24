@@ -190,7 +190,7 @@ if st.session_state.page == "Home":
             st.button("Social Data Monitoring", on_click=set_page, args=("social",))
            
         with col2:
-            st.image("dd.jpg", caption="", use_column_width=True)
+            st.image("dd.jpg", caption="", use_container_width=True)
 
 elif st.session_state.page == "social":
     if st.session_state.reddit_data.empty:
