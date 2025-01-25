@@ -138,7 +138,7 @@ if st.session_state.page == "Home":
             search_query = st.text_input("Enter a Search Query:", value="", placeholder="Type a query to search for posts")
 
             # Input fields
-            subreddit = st.text_input("Enter a Subreddit (e.g., 'all', 'worldnews'):", value="")
+            subreddit = st.text_input("Enter a Subreddit (e.g.,  'r\worldnews' please write 'worldnews' ):", value="")
 
             # Date inputs
             start_date = st.date_input("Start Date:", value=datetime.now() - timedelta(days=15))
