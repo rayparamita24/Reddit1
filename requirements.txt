@@ -1,7 +1,6 @@
 streamlit
 matplotlib
 ydata-profiling==4.6.4
-setuptools>=68
 pandas
 numpy
 nltk
@@ -9,4 +8,5 @@ textblob
 textstat
 rapidfuzz
 praw
+
 
